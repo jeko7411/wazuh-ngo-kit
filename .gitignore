@@ -1,0 +1,17 @@
+# Secretos y llaves
+.env
+*.pem
+*.key
+client.keys
+authd.pass
+
+# Respaldos y datos crudos (pueden contener nombres de equipos, usuarios y rutas)
+backups/
+wazuh-backup/
+*.tar.gz
+*.bak
+*raw*.json
+
+# Archivos de editor y sistema
+.DS_Store
+*.swp

@@ -1,0 +1,47 @@
+<!--
+  Reglas personalizadas FIM tal como estan desplegadas en el servidor del estudio (Wazuh 4.14.8).
+  Reglas padre: 550 (checksum modificado), 553 (archivo eliminado), 554 (archivo creado).
+  La regex de la regla 100006 usa marcadores (APP_DIR_1 ... APP_DIR_4): reemplazalos por fragmentos
+  de las rutas de tus aplicaciones criticas antes de usar el archivo.
+  Las descripciones de 100005 y 100006 incluyen la ruta ($(file)), por lo que las alertas contienen rutas.
+-->
+<group name="local,syscheck,">
+
+  <!-- 100008: silencia archivos temporales de Office y .tmp -->
+  <rule id="100008" level="0">
+    <if_sid>550,553,554</if_sid>
+    <field name="file" type="pcre2">(?i)(\\~\$[^\\]*$|\.tmp$)</field>
+    <description>Ignorado: archivo temporal (Office, .tmp).</description>
+  </rule>
+
+  <!-- 100005: archivo eliminado en ruta vigilada (no temporal, fuera de Windows) -->
+  <rule id="100005" level="5">
+    <if_sid>553</if_sid>
+    <field name="file" type="pcre2" negate="yes">(?i)(^c:\\windows\\|\\~\$[^\\]*$|\.tmp$)</field>
+    <description>Archivo eliminado en ruta vigilada: $(file)</description>
+    <group>pci_dss_11.5,gdpr_II_5.1.f,</group>
+  </rule>
+
+  <!-- 100009: borrado masivo en un mismo equipo -->
+  <rule id="100009" level="12" frequency="20" timeframe="120" ignore="300">
+    <if_matched_sid>100005</if_matched_sid>
+    <same_location />
+    <description>ALERTA CRÍTICA: borrado masivo (20 o más archivos en 2 minutos) en el mismo equipo. Posible ransomware o error humano.</description>
+    <mitre>
+      <id>T1485</id>
+    </mitre>
+    <group>pci_dss_11.5,gdpr_II_5.1.f,</group>
+  </rule>
+
+  <!-- 100006: modificación en programas del sistema central -->
+  <rule id="100006" level="10">
+    <if_sid>550</if_sid>
+    <field name="file" type="pcre2">(?i)(APP_DIR_1|APP_DIR_2|APP_DIR_3|APP_DIR_4)</field>
+    <description>SEGURIDAD: Modificación detectada en archivo del sistema central: $(file)</description>
+    <mitre>
+      <id>T1565.001</id>
+    </mitre>
+    <group>pci_dss_11.5,gdpr_II_5.1.f,</group>
+  </rule>
+
+</group>
